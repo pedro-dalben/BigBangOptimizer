@@ -1,7 +1,6 @@
 package com.pedrodalben.bigbangoptimizer.cleanup;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.pedrodalben.bigbangoptimizer.BigBangOptimizer;
 import com.pedrodalben.bigbangoptimizer.core.CleanupResult;
@@ -14,19 +13,23 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class EntityCleanupAuditLogger {
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Gson GSON = new Gson();
     private static final Path LOG_DIR = Paths.get("logs", "bigbangoptimizer");
+    private static final Path LOG_FILE = LOG_DIR.resolve("cleanup.log");
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
     public static void logExecution(CleanupResult result) {
-        try {
-            Files.createDirectories(LOG_DIR);
-        } catch (IOException e) {
-            BigBangOptimizer.LOGGER.error("[BigBangOptimizer] Failed to create log directory: {}", e.getMessage());
-            return;
-        }
+        // Print human-readable summary to console immediately
+        BigBangOptimizer.LOGGER.info("[BigBangOptimizer] Cleanup summary:");
+        BigBangOptimizer.LOGGER.info("[BigBangOptimizer]   Items removed: {}", result.getItemsRemoved());
+        BigBangOptimizer.LOGGER.info("[BigBangOptimizer]   Pokemon removed: {}", result.getPokemonRemoved());
+        BigBangOptimizer.LOGGER.info("[BigBangOptimizer]   Total protected: {}", result.getTotalProtected());
+        BigBangOptimizer.LOGGER.info("[BigBangOptimizer]   Duration: {}ms", result.getDurationMs());
 
+        // Prepare JSON payload
         JsonObject json = new JsonObject();
         json.addProperty("timestamp", TimeFormatters.formatTimestamp(Instant.now()));
         json.addProperty("trigger", result.getTrigger());
@@ -53,17 +56,33 @@ public class EntityCleanupAuditLogger {
         }
         json.add("dimensions", dimensionsObj);
 
-        Path logFile = LOG_DIR.resolve("cleanup-" + Instant.now().toEpochMilli() + ".json");
-        try {
-            Files.writeString(logFile, GSON.toJson(json) + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-            BigBangOptimizer.LOGGER.info("[BigBangOptimizer] Audit log written to {}", logFile);
-        } catch (IOException e) {
-            BigBangOptimizer.LOGGER.error("[BigBangOptimizer] Failed to write audit log: {}", e.getMessage());
-        }
+        final String logLine = GSON.toJson(json) + "\n";
 
-        BigBangOptimizer.LOGGER.info("[BigBangOptimizer] Cleanup summary:");
-        BigBangOptimizer.LOGGER.info("[BigBangOptimizer]   Items removed: {}", result.getItemsRemoved());
-        BigBangOptimizer.LOGGER.info("[BigBangOptimizer]   Pokemon removed: {}", result.getPokemonRemoved());
-        BigBangOptimizer.LOGGER.info("[BigBangOptimizer]   Total protected: {}", result.getTotalProtected());
+        // Write to log file asynchronously in background thread
+        CompletableFuture.runAsync(() -> {
+            try {
+                Files.createDirectories(LOG_DIR);
+                if (Files.exists(LOG_FILE) && Files.size(LOG_FILE) > MAX_FILE_SIZE) {
+                    rotateLogs();
+                }
+                Files.writeString(LOG_FILE, logLine, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            } catch (Exception e) {
+                BigBangOptimizer.LOGGER.error("[BigBangOptimizer] Failed to write audit log asynchronously: {}", e.getMessage());
+            }
+        });
+    }
+
+    private static void rotateLogs() {
+        try {
+            for (int i = 5; i > 0; i--) {
+                Path source = LOG_DIR.resolve("cleanup.log" + (i == 1 ? "" : "." + (i - 1)));
+                Path target = LOG_DIR.resolve("cleanup.log." + i);
+                if (Files.exists(source)) {
+                    Files.move(source, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
+        } catch (IOException e) {
+            BigBangOptimizer.LOGGER.warn("[BigBangOptimizer] Failed to rotate audit logs: {}", e.getMessage());
+        }
     }
 }
