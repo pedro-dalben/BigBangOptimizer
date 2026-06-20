@@ -25,6 +25,9 @@ public class CleanupRunner {
             if (itemModule != null && itemModule.isEnabled()) {
                 CleanupExecution itemExec = itemModule.execute(server, dryRun, config.getItemsMaxRemovedPerRun());
                 result.addItemRemoved(itemExec.getRemovedCount());
+                for (net.minecraft.world.entity.Entity entity : itemExec.getRemoved()) {
+                    result.addDimensionStat(entity.level().dimension().location().toString(), true, 1);
+                }
                 for (Map.Entry<String, Integer> entry : itemExec.getProtectedCounts().entrySet()) {
                     result.addProtectedByReason(entry.getKey(), entry.getValue());
                 }
@@ -36,6 +39,9 @@ public class CleanupRunner {
             if (pokemonModule != null && pokemonModule.isEnabled()) {
                 CleanupExecution pokemonExec = pokemonModule.execute(server, dryRun, config.getPokemonMaxRemovedPerRun());
                 result.addPokemonRemoved(pokemonExec.getRemovedCount());
+                for (net.minecraft.world.entity.Entity entity : pokemonExec.getRemoved()) {
+                    result.addDimensionStat(entity.level().dimension().location().toString(), false, 1);
+                }
                 for (Map.Entry<String, Integer> entry : pokemonExec.getProtectedCounts().entrySet()) {
                     result.addProtectedByReason(entry.getKey(), entry.getValue());
                 }
