@@ -19,7 +19,7 @@ public class ClearCommand {
 
     private static ServerPlayer getPlayer(CommandSourceStack source) {
         try {
-            return getPlayer(source);
+            return source.getPlayer();
         } catch (Exception e) {
             return null;
         }
