@@ -82,9 +82,26 @@
 - **Setup**: Durante contagem/limpeza
 - **Esperado**: Nenhum chunk é carregado
 
+### 18. Cancelamento de Limpeza Ativa
+- **Setup**: Executar `/bbo clear schedule items` ou aguardar início de avisos (`State.WARNING`), e rodar `/bbo clear cancel`
+- **Esperado**: O scheduler cancela a limpeza imediatamente, retornando ao estado `IDLE` e silenciando os avisos subsequentes.
+
+### 19. Execução via Console do Servidor
+- **Setup**: Executar `/bbo clear now all`, `/bbo status` ou `/bbo reload` diretamente pelo console do servidor Linux
+- **Esperado**: O comando executa perfeitamente sem NullPointerException ou problemas de permissão.
+
+### 20. Triggers de Performance (TPS/MSPT)
+- **Setup**: Configurar `mode = "threshold"` e forçar degradação de MSPT (por exemplo, acima de 60ms) com número de itens ou Pokémon acima do limite global.
+- **Esperado**: O mod aciona a limpeza automática após atingir o número configurado de amostras consecutivas degradadas (`consecutive_bad_samples`).
+
+### 21. Rotação de Logs e Formato JSONL
+- **Setup**: Executar limpezas automáticas ou manuais e verificar o arquivo de saída
+- **Esperado**: Logs estruturados em formato JSON Lines em um único arquivo `logs/bigbangoptimizer/cleanup.log` que rotaciona automaticamente ao atingir 10MB (gerando backups `.1` a `.5`).
+
 ## Como Executar Testes
 
 1. Compile o mod: `./gradlew build`
-2. Instale no servidor de teste
-3. Execute comandos de teste
-4. Verifique logs em `logs/bigbangoptimizer/`
+2. Instale o JAR gerado em `build/libs/` na pasta `mods/` de um servidor NeoForge 1.21.1 de teste.
+3. Teste o boot sem o Cobblemon para validar o isolamento de classes.
+4. Adicione o Cobblemon, inicialize e execute os comandos administrativos descritos para validar as proteções e a máquina de estados.
+5. Verifique a escrita do log de auditoria em `logs/bigbangoptimizer/cleanup.log`.
