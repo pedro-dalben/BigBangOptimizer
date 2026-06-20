@@ -1,0 +1,213 @@
+# Configuração padrão do BigBangOptimizer
+# Salvar em: config/bigbangoptimizer-server.toml
+
+[general]
+  # Ativar ou desativar o mod por completo.
+  # Valor padrão: true
+  enabled = true
+
+  # Nível de log no console do servidor.
+  # Opções: TRACE, DEBUG, INFO, WARN, ERROR
+  # Valor padrão: "INFO"
+  log_level = "INFO"
+
+[monitoring]
+  # Intervalo em segundos entre amostras de performance do servidor (TPS/MSPT).
+  # Intervalo permitido: 1 a 300 segundos.
+  # Valor padrão: 20
+  sample_interval_seconds = 20
+
+  # Tamanho do histórico de amostras mantidas na memória para cálculo de médias.
+  # Intervalo permitido: 10 a 3600.
+  # Valor padrão: 180 (representa 1 hora se sample_interval_seconds for 20)
+  history_size = 180
+
+[cleanup]
+  # Ativar ou desativar o agendamento automático de limpezas.
+  # Valor padrão: true
+  enabled = true
+
+  # Intervalo em minutos entre verificações/limpezas automáticas por tempo.
+  # Intervalo permitido: 1 a 1440 minutos.
+  # Valor padrão: 15
+  interval_minutes = 15
+
+  # Cooldown em minutos após uma limpeza para impedir novas limpezas automáticas imediatas.
+  # Intervalo permitido: 0 a 1440 minutos.
+  # Valor padrão: 20
+  cooldown_minutes = 20
+
+  # Se ativado, simula a limpeza e gera estatísticas sem remover nenhuma entidade (Dry Run).
+  # Valor padrão: false
+  dry_run = false
+
+  # Tempo máximo em milissegundos permitido para a rotina de limpeza por tick do servidor.
+  # Intervalo permitido: 10 a 5000 ms.
+  # Valor padrão: 150
+  max_execution_time_ms = 150
+
+  # Número máximo de entidades a serem inspecionadas em um único tick do servidor.
+  # Intervalo permitido: 10 a 10000.
+  # Valor padrão: 250
+  max_entities_scanned_per_tick = 250
+
+[warnings]
+  # Ativar ou desativar avisos prévios para jogadores antes de iniciar a limpeza.
+  # Valor padrão: true
+  enabled = true
+
+  # Segundos restantes para a limpeza em que os avisos serão disparados.
+  # Cada aviso cadastrado deve ser maior que zero. O scheduler ordenará de forma decrescente.
+  # Valor padrão: [60, 30, 10, 5]
+  seconds = [60, 30, 10, 5]
+
+  # Enviar aviso no chat global dos jogadores.
+  # Valor padrão: true
+  chat = true
+
+  # Mostrar aviso grande centralizado na tela dos jogadores (Title).
+  # Valor padrão: false
+  title = false
+
+  # Mostrar aviso na barra de ações acima do inventário dos jogadores (Actionbar).
+  # Valor padrão: false
+  actionbar = false
+
+[items]
+  # Ativar ou desativar a limpeza automática de itens jogados no chão (ItemEntity).
+  # Valor padrão: true
+  enabled = true
+
+  # Quantidade mínima global de itens no servidor para que a limpeza possa ser acionada.
+  # Evita limpar itens se a quantidade total no servidor for muito baixa.
+  # Intervalo permitido: 1 a 100000.
+  # Valor padrão: 500
+  minimum_global_count = 500
+
+  # Idade mínima em segundos que um item deve ter no chão para ser considerado para limpeza.
+  # Impede a remoção de itens recém-soltos por jogadores.
+  # Intervalo permitido: 0 a 3600 segundos.
+  # Valor padrão: 90
+  minimum_age_seconds = 90
+
+  # Limite máximo de itens que podem ser removidos em uma única execução de limpeza.
+  # Intervalo permitido: 1 a 10000.
+  # Valor padrão: 500
+  max_removed_per_run = 500
+
+  # Raio de proteção (em blocos) ao redor de jogadores onde itens nunca serão removidos.
+  # Intervalo permitido: 0.0 a 256.0.
+  # Valor padrão: 24.0
+  protect_near_players_radius = 24.0
+
+  # Whitelist de IDs de itens que NUNCA serão limpos.
+  # Exemplo: ["minecraft:diamond", "minecraft:netherite_ingot"]
+  # Valor padrão: []
+  whitelist = []
+
+  # Blacklist de IDs de itens que SEMPRE serão limpos (se atingirem a idade mínima),
+  # ignorando whitelist global mas ainda respeitando proximidade de jogador e tag de proteção.
+  # Valor padrão: []
+  blacklist = []
+
+[pokemon]
+  # Ativar ou desativar a limpeza automática de Pokémon selvagens distantes.
+  # Valor padrão: true
+  enabled = true
+
+  # Quantidade mínima global de Pokémon selvagens no servidor antes de disparar a limpeza.
+  # Intervalo permitido: 1 a 100000.
+  # Valor padrão: 250
+  minimum_global_count = 250
+
+  # Idade mínima em segundos de existência de um Pokémon selvagem antes de ser elegível.
+  # Impede a limpeza de Pokémon recém-gerados por spawn natural.
+  # Intervalo permitido: 0 a 3600 segundos.
+  # Valor padrão: 120
+  minimum_age_seconds = 120
+
+  # Limite máximo de Pokémon selvagens removidos por execução.
+  # Intervalo permitido: 1 a 10000.
+  # Valor padrão: 100
+  max_removed_per_run = 100
+
+  # Raio de segurança (em blocos) ao redor de jogadores. Pokémon dentro deste raio estão protegidos.
+  # Intervalo permitido: 0.0 a 256.0.
+  # Valor padrão: 64.0
+  protect_near_players_radius = 64.0
+
+  # Ativar proteções detalhadas para o Cobblemon:
+  # Proteger Pokémon Shinies
+  protect_shiny = true
+  # Proteger Pokémon Lendários
+  protect_legendary = true
+  # Proteger Pokémon Míticos
+  protect_mythical = true
+  # Proteger Pokémon que possuem um jogador como dono (capturados)
+  protect_player_owned = true
+  # Proteger Pokémon em batalha ativa
+  protect_battling = true
+  # Proteger Pokémon atualmente evoluindo
+  protect_evolving = true
+  # Proteger Pokémon vinculados a pastos (Pasture Blocks)
+  protect_pasture_tethered = true
+  # Proteger clones gerados por batalhas temporárias
+  protect_battle_clones = true
+  # Proteger Pokémon montados ou com passageiros (jogadores/NPCs)
+  protect_mounted = true
+  # Proteger Pokémon que receberam etiquetas de nome customizadas (Name Tag)
+  protect_named = true
+  # Proteger Pokémon associados a treinadores NPCs do mundo
+  protect_npc_related = true
+  # Ativar proteção pela tag de entidade Minecraft 'bigbangoptimizer:protected'
+  protect_bigbangoptimizer_tag = true
+
+[loot_balls]
+  # Ativar ou desativar a limpeza de loot balls soltas (Cobbleloots Loot Balls).
+  # Valor padrão: false
+  enabled = false
+
+  # Quantidade mínima global de Loot Balls antes de liberar a limpeza.
+  # Valor padrão: 100
+  minimum_global_count = 100
+
+  # Idade mínima em segundos para permitir remoção.
+  # Valor padrão: 300
+  minimum_age_seconds = 300
+
+  # Limite máximo de remoção por run.
+  # Valor padrão: 100
+  max_removed_per_run = 100
+
+[temporary_entities]
+  # Ativar ou desativar a limpeza de projéteis/entidades temporárias configuradas.
+  # Valor padrão: false
+  enabled = false
+
+  # IDs de entidades adicionais para limpeza periódica segura (ex: projéteis órfãos de mods de magia).
+  # Valor padrão: ["ars_nouveau:follow_proj"]
+  entity_ids = ["ars_nouveau:follow_proj"]
+
+[triggers]
+  # Modo de disparo da limpeza automática.
+  # Opções:
+  #   "schedule"              - Executa estritamente a cada 'interval_minutes' (ignora performance do servidor).
+  #   "threshold"             - Executa apenas quando detecta lag real (TPS/MSPT) e quantidade de entidades alta.
+  #   "threshold_or_schedule" - Executa tanto se o servidor entrar em lag quanto ao fim do intervalo do timer normal.
+  # Valor padrão: "threshold_or_schedule"
+  mode = "threshold_or_schedule"
+
+  # Limite mínimo de TPS (Ticks Per Second) para classificar o desempenho como degradado (lag).
+  # Intervalo permitido: 1.0 a 20.0.
+  # Valor padrão: 15.0
+  minimum_tps = 15.0
+
+  # Limite máximo de MSPT (Milliseconds Per Tick) para classificar o desempenho como degradado.
+  # Intervalo permitido: 1.0 a 1000.0.
+  # Valor padrão: 60.0ms
+  maximum_mspt = 60.0
+
+  # Quantidade de amostras ruins consecutivas necessárias no intervalo de monitoramento
+  # para que a limpeza automática antecipada por lag seja disparada (evita picos falsos).
+  # Intervalo permitido: 1 a 100.
+  # Valor padrão: 3
