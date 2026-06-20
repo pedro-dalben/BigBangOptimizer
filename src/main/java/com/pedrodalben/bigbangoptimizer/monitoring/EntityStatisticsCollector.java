@@ -25,10 +25,16 @@ public class EntityStatisticsCollector {
     public Map<String, Integer> countByType(MinecraftServer server) {
         Map<String, Integer> counts = new LinkedHashMap<>();
         for (ServerLevel level : server.getAllLevels()) {
-            for (Entity entity : level.getAllEntities()) {
-                ResourceLocation key = EntityType.getKey(entity.getType());
-                counts.merge(key.toString(), 1, Integer::sum);
-            }
+            countByType(level).forEach((k, v) -> counts.merge(k, v, Integer::sum));
+        }
+        return counts;
+    }
+
+    public Map<String, Integer> countByType(ServerLevel level) {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        for (Entity entity : level.getAllEntities()) {
+            ResourceLocation key = EntityType.getKey(entity.getType());
+            counts.merge(key.toString(), 1, Integer::sum);
         }
         return counts;
     }

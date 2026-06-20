@@ -56,10 +56,29 @@ public class EntityStatsCommand {
             return 0;
         }
 
-        EntityStatisticsCollector collector = EntityStatisticsCollector.getInstance();
-        Map<String, Integer> byType = collector.countByType(server);
+        net.minecraft.server.level.ServerLevel targetLevel = null;
+        for (net.minecraft.server.level.ServerLevel level : server.getAllLevels()) {
+            String fullId = level.dimension().location().toString();
+            String shortId = level.dimension().location().getPath();
+            if (fullId.equalsIgnoreCase(dimension) || shortId.equalsIgnoreCase(dimension)) {
+                targetLevel = level;
+                break;
+            }
+        }
 
-        source.sendSuccess(() -> Component.literal("§6§l=== Entidades em " + dimension + " ==="), false);
+        if (targetLevel == null) {
+            String available = java.util.stream.StreamSupport.stream(server.getAllLevels().spliterator(), false)
+                .map(l -> l.dimension().location().toString())
+                .collect(Collectors.joining(", "));
+            source.sendFailure(Component.literal("§cDimensão '" + dimension + "' não encontrada. Disponíveis: " + available));
+            return 0;
+        }
+
+        final net.minecraft.server.level.ServerLevel levelToStats = targetLevel;
+        EntityStatisticsCollector collector = EntityStatisticsCollector.getInstance();
+        Map<String, Integer> byType = collector.countByType(levelToStats);
+
+        source.sendSuccess(() -> Component.literal("§6§l=== Entidades em " + levelToStats.dimension().location().toString() + " ==="), false);
         byType.forEach((type, count) ->
             source.sendSuccess(() -> Component.literal("§7  " + type + ": §f" + count), false)
         );
