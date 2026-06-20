@@ -40,7 +40,8 @@ public class TpsMonitor {
         while (msptHistory.size() > maxSize) msptHistory.removeFirst();
 
         sampleCount++;
-        if (sampleCount % config.getMonitoringSampleInterval() == 0) {
+        int intervalTicks = config.getMonitoringSampleInterval() * 20;
+        if (sampleCount % intervalTicks == 0) {
             calculateAverages();
         }
     }

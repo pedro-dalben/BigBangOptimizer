@@ -21,6 +21,8 @@ public class CleanupScheduler {
     private int currentWarningIndex = 0;
     private List<Integer> warningSeconds;
     private long executionStartTick = 0;
+    private long lastThresholdCheckTick = 0;
+    private int consecutiveBadSamplesCount = 0;
 
     public CleanupScheduler(ModuleRegistry moduleRegistry) {
         this.moduleRegistry = moduleRegistry;
@@ -38,7 +40,7 @@ public class CleanupScheduler {
 
         switch (state) {
             case IDLE:
-                checkSchedule(currentTick);
+                checkSchedule(currentTick, server);
                 break;
             case SCHEDULED:
                 handleScheduled(currentTick);
@@ -54,10 +56,80 @@ public class CleanupScheduler {
         }
     }
 
-    private void checkSchedule(long currentTick) {
-        if (nextScheduledTick > 0 && currentTick >= nextScheduledTick) {
+    private void checkSchedule(long currentTick, MinecraftServer server) {
+        OptimizerConfig config = OptimizerConfig.getInstance();
+        String mode = config.getTriggerMode();
+
+        // 1. Time Schedule check (for "schedule" or "threshold_or_schedule" modes)
+        boolean timeTrigger = false;
+        if ("schedule".equalsIgnoreCase(mode) || "threshold_or_schedule".equalsIgnoreCase(mode)) {
+            if (nextScheduledTick == 0) {
+                nextScheduledTick = currentTick + (config.getCleanupIntervalMinutes() * 60L * 20L);
+            }
+            if (currentTick >= nextScheduledTick) {
+                timeTrigger = true;
+            }
+        }
+
+        // 2. Performance Threshold check (for "threshold" or "threshold_or_schedule" modes)
+        boolean perfTrigger = false;
+        if ("threshold".equalsIgnoreCase(mode) || "threshold_or_schedule".equalsIgnoreCase(mode)) {
+            long checkInterval = config.getMonitoringSampleInterval() * 20L;
+            if (currentTick - lastThresholdCheckTick >= checkInterval) {
+                lastThresholdCheckTick = currentTick;
+                if (evaluatePerformanceThreshold(server)) {
+                    consecutiveBadSamplesCount++;
+                    if (consecutiveBadSamplesCount >= config.getTriggerConsecutiveBadSamples()) {
+                        perfTrigger = true;
+                        consecutiveBadSamplesCount = 0;
+                    }
+                } else {
+                    consecutiveBadSamplesCount = 0;
+                }
+            }
+        }
+
+        if (timeTrigger || perfTrigger) {
             startWarningPhase(currentTick);
         }
+    }
+
+    private boolean evaluatePerformanceThreshold(MinecraftServer server) {
+        OptimizerConfig config = OptimizerConfig.getInstance();
+        com.pedrodalben.bigbangoptimizer.monitoring.TpsMonitor tpsMonitor = com.pedrodalben.bigbangoptimizer.monitoring.TpsMonitor.getInstance();
+
+        double avgTps = tpsMonitor.getAverageTps();
+        double avgMspt = tpsMonitor.getAverageMspt();
+
+        boolean tpsDegraded = avgTps < config.getTriggerMinimumTps();
+        boolean msptDegraded = avgMspt > config.getTriggerMaximumMspt();
+
+        if (tpsDegraded || msptDegraded) {
+            int itemsCount = 0;
+            if (config.isItemsEnabled()) {
+                com.pedrodalben.bigbangoptimizer.cleanup.ItemCleanupModule itemModule = 
+                    (com.pedrodalben.bigbangoptimizer.cleanup.ItemCleanupModule) moduleRegistry.get("item_cleanup");
+                if (itemModule != null) {
+                    itemsCount = itemModule.countItems(server);
+                }
+            }
+
+            int pokemonCount = 0;
+            if (config.isPokemonEnabled()) {
+                com.pedrodalben.bigbangoptimizer.cleanup.PokemonCleanupModule pokemonModule = 
+                    (com.pedrodalben.bigbangoptimizer.cleanup.PokemonCleanupModule) moduleRegistry.get("pokemon_cleanup");
+                if (pokemonModule != null) {
+                    pokemonCount = pokemonModule.countPokemon(server);
+                }
+            }
+
+            boolean itemsExcess = config.isItemsEnabled() && itemsCount > config.getItemsMinimumGlobalCount();
+            boolean pokemonExcess = config.isPokemonEnabled() && pokemonCount > config.getPokemonMinimumGlobalCount();
+
+            return itemsExcess || pokemonExcess;
+        }
+
+        return false;
     }
 
     private void handleScheduled(long currentTick) {
