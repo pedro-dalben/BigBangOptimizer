@@ -115,28 +115,30 @@ public class PokemonCleanupModule implements OptimizerModule {
         double protectRadius = config.getPokemonProtectNearPlayersRadius();
         int minAgeTicks = config.getPokemonMinimumAgeSeconds() * 20;
 
-        List<Entity> toRemove = new ArrayList<>();
+        List<Entity> eligibleCandidates = new ArrayList<>();
 
         for (Entity entity : pokemonEntities) {
-            if (toRemove.size() >= maxRemovals) break;
-
             String reason = getProtectionReason(entity, players, protectRadius, minAgeTicks, config);
             if (reason != null) {
                 execution.addProtected(reason);
             } else {
-                toRemove.add(entity);
+                eligibleCandidates.add(entity);
             }
         }
 
-        toRemove.sort(Comparator.comparingInt(e -> -e.tickCount));
+        eligibleCandidates.sort(Comparator.comparingInt(e -> -e.tickCount));
 
-        if (!dryRun) {
-            for (Entity entity : toRemove) {
+        List<Entity> toRemove = new ArrayList<>();
+        for (Entity entity : eligibleCandidates) {
+            if (toRemove.size() >= maxRemovals) break;
+            toRemove.add(entity);
+        }
+
+        for (Entity entity : toRemove) {
+            if (!dryRun) {
                 SafeEntityRemoval.remove(entity);
-                execution.addRemoved(entity);
             }
-        } else {
-            execution.getRemoved().addAll(toRemove);
+            execution.addRemoved(entity);
         }
 
         return execution;

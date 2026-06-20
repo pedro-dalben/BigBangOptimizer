@@ -159,13 +159,11 @@ public class ItemCleanupModule implements OptimizerModule {
             toRemove.add(item);
         }
 
-        if (!dryRun) {
-            for (ItemEntity item : toRemove) {
+        for (ItemEntity item : toRemove) {
+            if (!dryRun) {
                 SafeEntityRemoval.remove(item);
-                execution.addRemoved(item);
             }
-        } else {
-            execution.getRemoved().addAll(toRemove);
+            execution.addRemoved(item);
         }
 
         return execution;

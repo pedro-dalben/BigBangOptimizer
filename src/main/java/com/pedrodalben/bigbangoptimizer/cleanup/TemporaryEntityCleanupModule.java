@@ -92,13 +92,11 @@ public class TemporaryEntityCleanupModule implements OptimizerModule {
             }
         }
 
-        if (!dryRun) {
-            for (Entity entity : toRemove) {
+        for (Entity entity : toRemove) {
+            if (!dryRun) {
                 SafeEntityRemoval.remove(entity);
-                execution.addRemoved(entity);
             }
-        } else {
-            execution.getRemoved().addAll(toRemove);
+            execution.addRemoved(entity);
         }
 
         return execution;
