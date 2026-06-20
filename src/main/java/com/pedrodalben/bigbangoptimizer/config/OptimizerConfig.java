@@ -68,6 +68,7 @@ public class OptimizerConfig {
     private static MinecraftServer currentServer;
 
     public OptimizerConfig() {
+        INSTANCE = this;
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 
         builder.comment("General settings").push("general");
