@@ -71,12 +71,18 @@ IDLE → SCHEDULED → WARNING → EXECUTING → COOLDOWN → IDLE
 4. **EXECUTING**: Executando limpeza
 5. **COOLDOWN**: Aguardando cooldown
 
-## Integrações
-
-- **Cobblemon**: Verificação de proteção de Pokémon
-- **FTB Chunks**: Detecção de presença (futura extensão)
+- **Cobblemon**: Verificação de proteção de Pokémon (desacoplada de forma segura)
+- **FTB Chunks**: Detecção de presença (modo passivo)
 - **Spark**: Detecção de presença (modo passivo)
 
 ## Tags de Proteção
 
 - `bigbangoptimizer:protected`: Tag persistente para proteger entidades
+
+## Isolamento e Otimizações de Concorrência
+
+1. **Isolamento de Integrações Opcionais**: Todo import de classes de mods externos (como `PokemonEntity` do Cobblemon) está isolado em classes que só são carregadas em tempo de execução se o mod estiver presente. Outros componentes lidam apenas com a API padrão do Minecraft (`Entity`), eliminando erros de `NoClassDefFoundError` na inicialização do servidor.
+2. **Log de Auditoria Assíncrono**: Escritas de auditoria em disco ocorrem fora da thread principal através de `CompletableFuture.runAsync()`, eliminando travamentos de tick por I/O síncrono bloqueante.
+3. **Formato JSON Lines (JSONL)**: Os registros de auditoria são anexados incrementalmente a um único arquivo `cleanup.log` no formato JSON Lines.
+4. **Rotação de Logs automática**: O arquivo de auditoria rotaciona ao atingir 10MB, preservando até 5 backups históricos (`cleanup.log.1` a `cleanup.log.5`).
+5. **Máquina de Estados Absoluta**: O agendador `CleanupScheduler` calcula o tick de destino (`cleanupTargetTick`) de forma absoluta, tratando warnings e execuções de forma sequencial exata mesmo sob variações de tick rate (lag).
