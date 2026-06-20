@@ -76,10 +76,11 @@ public class CobblemonEntityInspector {
         return entity instanceof PokemonEntity;
     }
 
-    public boolean isPlayerOwned(PokemonEntity entity) {
+    public boolean isPlayerOwned(Entity entity) {
+        if (!(entity instanceof PokemonEntity pokemonEntity)) return true;
         if (!hasGetPokemon || !hasIsPlayerOwned) return true;
         try {
-            Object pokemon = entity.getPokemon();
+            Object pokemon = pokemonEntity.getPokemon();
             if (pokemon == null) return true;
             java.lang.reflect.Method m = pokemon.getClass().getMethod("isPlayerOwned");
             return (Boolean) m.invoke(pokemon);
@@ -88,28 +89,31 @@ public class CobblemonEntityInspector {
         }
     }
 
-    public boolean isInBattle(PokemonEntity entity) {
+    public boolean isInBattle(Entity entity) {
+        if (!(entity instanceof PokemonEntity pokemonEntity)) return true;
         if (!hasGetBattle) return true;
         try {
-            return entity.getBattle() != null;
+            return pokemonEntity.getBattle() != null;
         } catch (Exception e) {
             return true;
         }
     }
 
-    public boolean isEvolving(PokemonEntity entity) {
+    public boolean isEvolving(Entity entity) {
+        if (!(entity instanceof PokemonEntity pokemonEntity)) return true;
         if (!hasIsEvolving) return true;
         try {
-            return entity.isEvolving();
+            return pokemonEntity.isEvolving();
         } catch (Exception e) {
             return true;
         }
     }
 
-    public boolean isShiny(PokemonEntity entity) {
+    public boolean isShiny(Entity entity) {
+        if (!(entity instanceof PokemonEntity pokemonEntity)) return true;
         if (!hasGetPokemon) return true;
         try {
-            Object pokemon = entity.getPokemon();
+            Object pokemon = pokemonEntity.getPokemon();
             if (pokemon == null) return true;
             java.lang.reflect.Method m = pokemon.getClass().getMethod("getShiny");
             return (Boolean) m.invoke(pokemon);
@@ -118,19 +122,21 @@ public class CobblemonEntityInspector {
         }
     }
 
-    public boolean isPastureTethered(PokemonEntity entity) {
+    public boolean isPastureTethered(Entity entity) {
+        if (!(entity instanceof PokemonEntity pokemonEntity)) return true;
         if (!hasGetTethering) return true;
         try {
-            return entity.getTethering() != null;
+            return pokemonEntity.getTethering() != null;
         } catch (Exception e) {
             return true;
         }
     }
 
-    public boolean isBattleClone(PokemonEntity entity) {
+    public boolean isBattleClone(Entity entity) {
+        if (!(entity instanceof PokemonEntity pokemonEntity)) return true;
         if (!hasGetPokemon || !hasIsBattleClone) return true;
         try {
-            Object pokemon = entity.getPokemon();
+            Object pokemon = pokemonEntity.getPokemon();
             if (pokemon == null) return true;
             java.lang.reflect.Method m = pokemon.getClass().getMethod("isBattleClone");
             return (Boolean) m.invoke(pokemon);
@@ -139,7 +145,7 @@ public class CobblemonEntityInspector {
         }
     }
 
-    public boolean isMountedOrHasPassengers(PokemonEntity entity) {
+    public boolean isMountedOrHasPassengers(Entity entity) {
         try {
             return !entity.getPassengers().isEmpty();
         } catch (Exception e) {
@@ -147,11 +153,11 @@ public class CobblemonEntityInspector {
         }
     }
 
-    public boolean isRecentlySpawned(PokemonEntity entity, int minimumAgeTicks) {
+    public boolean isRecentlySpawned(Entity entity, int minimumAgeTicks) {
         return entity.tickCount < minimumAgeTicks;
     }
 
-    public boolean isNearAnyPlayer(PokemonEntity entity, double radius) {
+    public boolean isNearAnyPlayer(Entity entity, double radius) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) return true;
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
@@ -162,10 +168,11 @@ public class CobblemonEntityInspector {
         return false;
     }
 
-    public boolean isNpcRelated(PokemonEntity entity) {
+    public boolean isNpcRelated(Entity entity) {
+        if (!(entity instanceof PokemonEntity pokemonEntity)) return true;
         if (!hasGetPokemon || !hasIsNPCOwned) return true;
         try {
-            Object pokemon = entity.getPokemon();
+            Object pokemon = pokemonEntity.getPokemon();
             if (pokemon == null) return true;
             java.lang.reflect.Method m = pokemon.getClass().getMethod("isNPCOwned");
             return (Boolean) m.invoke(pokemon);
@@ -174,10 +181,11 @@ public class CobblemonEntityInspector {
         }
     }
 
-    public boolean isLegendaryOrMythical(PokemonEntity entity) {
+    public boolean isLegendaryOrMythical(Entity entity) {
+        if (!(entity instanceof PokemonEntity pokemonEntity)) return true;
         if (!hasGetPokemon) return true;
         try {
-            Object pokemon = entity.getPokemon();
+            Object pokemon = pokemonEntity.getPokemon();
             if (pokemon == null) return true;
             boolean legendary = false;
             boolean mythical = false;

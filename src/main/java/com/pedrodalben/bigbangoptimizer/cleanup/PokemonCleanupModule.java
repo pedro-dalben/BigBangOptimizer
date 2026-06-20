@@ -8,7 +8,6 @@ import com.pedrodalben.bigbangoptimizer.core.OptimizerModule;
 import com.pedrodalben.bigbangoptimizer.integrations.cobblemon.CobblemonEntityInspector;
 import com.pedrodalben.bigbangoptimizer.integrations.cobblemon.CobblemonIntegration;
 import com.pedrodalben.bigbangoptimizer.util.SafeEntityRemoval;
-import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -147,45 +146,47 @@ public class PokemonCleanupModule implements OptimizerModule {
     private String getProtectionReason(Entity entity, List<ServerPlayer> players, double protectRadius, int minAgeTicks, OptimizerConfig config) {
         if (!inspector.isPokemon(entity)) return "not_pokemon";
 
-        PokemonEntity pokemonEntity = (PokemonEntity) entity;
-
-        if (config.isPokemonProtectPlayerOwned() && inspector.isPlayerOwned(pokemonEntity)) {
+        if (config.isPokemonProtectPlayerOwned() && inspector.isPlayerOwned(entity)) {
             return "player_owned";
         }
 
-        if (config.isPokemonProtectBattling() && inspector.isInBattle(pokemonEntity)) {
+        if (config.isPokemonProtectPlayerOwned() && inspector.isPlayerOwned(entity)) {
+            return "player_owned";
+        }
+
+        if (config.isPokemonProtectBattling() && inspector.isInBattle(entity)) {
             return "battling";
         }
 
-        if (config.isPokemonProtectEvolving() && inspector.isEvolving(pokemonEntity)) {
+        if (config.isPokemonProtectEvolving() && inspector.isEvolving(entity)) {
             return "evolving";
         }
 
-        if (config.isPokemonProtectShiny() && inspector.isShiny(pokemonEntity)) {
+        if (config.isPokemonProtectShiny() && inspector.isShiny(entity)) {
             return "shiny";
         }
 
-        if (config.isPokemonProtectLegendary() && inspector.isLegendaryOrMythical(pokemonEntity)) {
+        if (config.isPokemonProtectLegendary() && inspector.isLegendaryOrMythical(entity)) {
             return "legendary_mythical";
         }
 
-        if (config.isPokemonProtectPastureTethered() && inspector.isPastureTethered(pokemonEntity)) {
+        if (config.isPokemonProtectPastureTethered() && inspector.isPastureTethered(entity)) {
             return "pasture_tethered";
         }
 
-        if (config.isPokemonProtectBattleClones() && inspector.isBattleClone(pokemonEntity)) {
+        if (config.isPokemonProtectBattleClones() && inspector.isBattleClone(entity)) {
             return "battle_clone";
         }
 
-        if (config.isPokemonProtectMounted() && inspector.isMountedOrHasPassengers(pokemonEntity)) {
+        if (config.isPokemonProtectMounted() && inspector.isMountedOrHasPassengers(entity)) {
             return "mounted";
         }
 
-        if (config.isPokemonProtectNamed() && pokemonEntity.getCustomName() != null) {
+        if (config.isPokemonProtectNamed() && entity.getCustomName() != null) {
             return "named";
         }
 
-        if (config.isPokemonProtectNpcRelated() && inspector.isNpcRelated(pokemonEntity)) {
+        if (config.isPokemonProtectNpcRelated() && inspector.isNpcRelated(entity)) {
             return "npc_related";
         }
 
@@ -201,7 +202,7 @@ public class PokemonCleanupModule implements OptimizerModule {
             return "too_young";
         }
 
-        if (protectRadius > 0 && inspector.isNearAnyPlayer(pokemonEntity, protectRadius)) {
+        if (protectRadius > 0 && inspector.isNearAnyPlayer(entity, protectRadius)) {
             return "near_player";
         }
 
