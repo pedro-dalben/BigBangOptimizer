@@ -64,6 +64,8 @@ public class CleanupScheduler {
         startWarningPhase(currentTick);
     }
 
+    private long cleanupTargetTick = 0;
+
     private void startWarningPhase(long currentTick) {
         OptimizerConfig config = OptimizerConfig.getInstance();
         warningSeconds = config.getWarningsSeconds();
@@ -71,37 +73,39 @@ public class CleanupScheduler {
             executeCleanup(currentTick);
             return;
         }
+
+        // Sort warnings descending to process from longest to shortest remaining time
+        warningSeconds = new java.util.ArrayList<>(warningSeconds);
+        warningSeconds.sort(java.util.Collections.reverseOrder());
+
+        int totalWarningSeconds = warningSeconds.get(0);
+        cleanupTargetTick = currentTick + (totalWarningSeconds * 20L);
         currentWarningIndex = 0;
         state = State.WARNING;
-        sendWarning(warningSeconds.get(currentWarningIndex));
+
+        checkAndSendWarnings(currentTick);
     }
 
     private void handleWarning(long currentTick) {
-        if (currentWarningIndex >= warningSeconds.size()) {
+        if (currentTick >= cleanupTargetTick) {
             executeCleanup(currentTick);
             return;
         }
 
-        int secondsRemaining = warningSeconds.get(currentWarningIndex);
-        long ticksRemaining = secondsRemaining * 20L;
-        long warningStartTick = currentTick - getElapsedTicksInWarning(currentTick);
-
-        if (currentTick >= warningStartTick + ticksRemaining) {
-            currentWarningIndex++;
-            if (currentWarningIndex < warningSeconds.size()) {
-                sendWarning(warningSeconds.get(currentWarningIndex));
-            } else {
-                executeCleanup(currentTick);
-            }
-        }
+        checkAndSendWarnings(currentTick);
     }
 
-    private long getElapsedTicksInWarning(long currentTick) {
-        long total = 0;
-        for (int i = 0; i < currentWarningIndex; i++) {
-            total += warningSeconds.get(i) * 20L;
+    private void checkAndSendWarnings(long currentTick) {
+        while (currentWarningIndex < warningSeconds.size()) {
+            int seconds = warningSeconds.get(currentWarningIndex);
+            long triggerTick = cleanupTargetTick - (seconds * 20L);
+            if (currentTick >= triggerTick) {
+                sendWarning(seconds);
+                currentWarningIndex++;
+            } else {
+                break;
+            }
         }
-        return total;
     }
 
     private void sendWarning(int seconds) {
@@ -170,6 +174,21 @@ public class CleanupScheduler {
         if (server == null) return;
         nextScheduledTick = server.getTickCount();
         state = State.SCHEDULED;
+    }
+
+    public boolean cancelActive() {
+        if (state == State.SCHEDULED || state == State.WARNING) {
+            state = State.IDLE;
+            MinecraftServer server = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();
+            if (server != null) {
+                OptimizerConfig config = OptimizerConfig.getInstance();
+                nextScheduledTick = server.getTickCount() + (config.getCleanupIntervalMinutes() * 60L * 20L);
+            } else {
+                nextScheduledTick = 0;
+            }
+            return true;
+        }
+        return false;
     }
 
     public State getState() { return state; }

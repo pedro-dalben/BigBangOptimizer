@@ -181,7 +181,12 @@ public class ClearCommand {
             return 0;
         }
 
-        source.sendSuccess(() -> Component.literal("§a✔ Nenhuma limpeza agendada para cancelar."), false);
+        boolean cancelled = BigBangOptimizer.getInstance().getScheduler().cancelActive();
+        if (cancelled) {
+            source.sendSuccess(() -> Component.literal("§a✔ Limpeza ativa ou agendada cancelada com sucesso."), false);
+        } else {
+            source.sendSuccess(() -> Component.literal("§7Nenhuma limpeza ativa ou agendada para cancelar."), false);
+        }
         return 1;
     }
 }
